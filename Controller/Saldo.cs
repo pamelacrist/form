@@ -82,39 +82,62 @@ namespace pastanova.Controller
                 MessageBox.Show("Selecione um saldo para remover", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }   
-        public static void editar(ListView lista,List<Model.Saldo> saldos, pastanova.View.FormularioSaldo formulario,Model.Saldo produtoSelecionado)
+        public static void editar(ListView lista,List<Model.Saldo> saldos, pastanova.View.FormularioSaldo formulario,Model.Saldo selecionado)
         {
             string almoxarifado = formulario.almoxarifado.Text.Trim();
             string produto = formulario.produto.Text.Trim();
-            int quantidade = int.Parse(formulario.quantidadeProduto.Text.Trim());
-            if (produto != "" && almoxarifado != "" && quantidade > 0)
+            string quantidade = formulario.produto.Text.Trim();
+        
+            if (quantidade != "" && produto != "" && almoxarifado != "" && int.Parse(quantidade) > 0)
             {
-                Model.Saldo saldo = saldos.FirstOrDefault(p => p.Id == produtoSelecionado.Id);
-                if (saldo != null)
+                try
                 {
-                    saldo.ProdutoId = int.Parse(produto);
-                    saldo.Quantidade = quantidade;
-                    saldo.AlmoxarifadoId = int.Parse(almoxarifado);
+                    Database.Contexto db = new Database.Contexto();
+                    Model.Saldo saldo = db.Saldos.Find(selecionado.Id);
+                    if (saldo != null)
+                    {
+                        saldo.ProdutoId = int.Parse(produto);
+                        saldo.Quantidade = int.Parse(quantidade);
+                        saldo.AlmoxarifadoId = int.Parse(almoxarifado);
+                        db.SaveChanges();
+                    }
+                   listar(lista);
                 }
-                lista = AtualizarListaProdutos(lista,saldos);
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Ocorreu um erro durante a edição do saldo: " + ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                
+            }
+            else
+            {
+                MessageBox.Show("Por favor, preencha todos os campos corretamente.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        private static ListView AtualizarListaProdutos(ListView lista,List<Model.Saldo>saldos)
+        private static ListView AtualizarListaProdutos(ListView lista, List<Model.Saldo> saldos)
         {
-            // Limpa todos os itens da lista de saldos
-            lista.Items.Clear();
-
-            // Adiciona cada saldo da lista na lista de saldos
-            foreach (Model.Saldo saldo in saldos)
+            try
             {
-                ListViewItem item = new ListViewItem(saldo.Id.ToString());
-                item.SubItems.Add(saldo.Produto.Nome.ToString());
-                item.SubItems.Add(saldo.Almoxarifado.Nome.ToString());
-                item.SubItems.Add(saldo.Quantidade.ToString());
-                item.Tag = saldo;
-                lista.Items.Add(item);
+                // Limpa todos os itens da lista de saldos
+                lista.Items.Clear();
+        
+                // Adiciona cada saldo da lista na lista de saldos
+                foreach (Model.Saldo saldo in saldos)
+                {
+                    ListViewItem item = new ListViewItem(saldo.Id.ToString());
+                    item.SubItems.Add(saldo.Produto.Nome.ToString());
+                    item.SubItems.Add(saldo.Almoxarifado.Nome.ToString());
+                    item.SubItems.Add(saldo.Quantidade.ToString());
+                    item.Tag = saldo;
+                    lista.Items.Add(item);
+                }
+                return lista;
             }
-            return lista;
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ocorreu um erro: "+ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
         }
     }
 }
